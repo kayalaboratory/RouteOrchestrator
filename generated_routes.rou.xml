@@ -1,0 +1,15 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+  <vType id="car_cbs" accel="1.0" decel="3.5" length="5" maxSpeed="5.00" sigma="0.5" color="yellow" tau="1.5" carFollowModel="IDM"/>
+  <vehicle id="agent_1" type="car_cbs" depart="0.0" departLane="best" departSpeed="0" color="255,0,0">
+    <route edges="-305916738#2 -305916738#1 -305916738#0 -305916649#10 -305916649#9 -305916649#8 -693673107 317399131#5 317399131#6 317399131#7"/>
+  </vehicle>
+  <vehicle id="agent_3" type="car_cbs" depart="0.0" departLane="best" departSpeed="0" color="255,140,0">
+    <route edges="305916639#2 305916639#3 305916639#4"/>
+  </vehicle>
+  <vehicle id="agent_4" type="car_cbs" depart="0.0" departLane="best" departSpeed="0" color="255,0,255">
+    <route edges="306921801#5 306921801#6 306925786#5 692921170 692921169#0 305916812#0 -305916763#1 -692146582#1 -692146582#0 -305916766"/>
+  </vehicle>
+  <vehicle id="agent_5" type="car_cbs" depart="0.0" departLane="best" departSpeed="0" color="255,255,0">
+    <route edges="-522849324#3 -522849324#2 -305916805 305916649#4 305916649#5 305916649#6 305916649#7 305916649#8 305916649#9 305916649#10 305916649#11 305916649#12 305916649#13 692921159 692921155#1 692921156#0 692921156#1 692921156#2 306918456#0 306918456#1 302395984#4 302395984#5 302395984#6 302395984#7"/>
+  </vehicle>
+</routes>
