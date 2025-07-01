@@ -1,4 +1,4 @@
-# Gerekli Kütüphaneler
+
 import osmnx as ox
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ import matplotlib.animation as animation # Animasyon için
 import xml.etree.ElementTree as ET # SUMO XML için
 from xml.dom import minidom      # SUMO XML pretty print için
 
-# sumolib'i import etmeye çalışalım
+
 try:
     import sumolib
     SUMOLIB_AVAILABLE = True
@@ -42,8 +42,8 @@ G_osmnx_planning_graph = None
 route_colors_global = ['r', 'b', 'darkorange', 'fuchsia', 'c', 'm', 'lime', 'gold']
 sumo_net_obj_global = None 
 ani = None 
-SUMO_EDGES_BY_NODES_CACHE = {} # Strateji B için önbellek
-ORIG_ID_TO_SUMO_EDGES_MAP = {} # Strateji C için harita
+SUMO_EDGES_BY_NODES_CACHE = {} 
+ORIG_ID_TO_SUMO_EDGES_MAP = {} 
 
 
 # --- Yardımcı Fonksiyonlar ---
@@ -77,7 +77,7 @@ def get_edge_speed_limit_mps(G, u, v):
     except Exception: return DEFAULT_SPEED_LIMIT_KMPH * METER_PER_KM / SECONDS_PER_HOUR
 
 # --- Agent Sınıfı ---
-class Agent: # (Değişiklik yok)
+class Agent: 
     def __init__(self, agent_id, start_node, goal_node, G_graph):
         self.id = agent_id; self.G = G_graph; self.start_node = start_node; self.goal_node = goal_node
         self.current_node = start_node; self.on_edge = None; self.edge_progress = 0.0
@@ -97,7 +97,7 @@ class Agent: # (Değişiklik yok)
         loc_str = f"N{self.current_node}" if self.on_edge is None else f"E{self.on_edge}({self.edge_progress:.0f}m)"
         path_str = f"{self.path_index}/{len(self.path_nodes)-1}" if self.path_nodes and len(self.path_nodes)>1 else ("0/0" if self.path_nodes else "N/A")
         return f"A{self.id}[{loc_str} S:{self.speed:.1f} D:{self.status} P:{path_str} H:{self.goal_node}]"
-    def update_state(self, current_time): # (Değişiklik yok)
+    def update_state(self, current_time): 
         if self.status != "MOVING": reserve_location(self.id, current_time + DELTA_T, self.current_location_id); return
         target_node = None; current_edge_data = None
         v_max_road = DEFAULT_SPEED_LIMIT_KMPH*METER_PER_KM/SECONDS_PER_HOUR; edge_len = 1.0
@@ -142,7 +142,7 @@ class Agent: # (Değişiklik yok)
 
 
 # --- Zaman Uyumlu A* Fonksiyonları ---
-def calculate_heuristic(node1_id, node2_id, G): # (Değişiklik yok)
+def calculate_heuristic(node1_id, node2_id, G): 
     if node1_id not in G.nodes or node2_id not in G.nodes: return float('inf')
     node1_data = G.nodes[node1_id]; node2_data = G.nodes[node2_id]
     try: distance = np.sqrt((node1_data['x'] - node2_data['x'])**2 + (node1_data['y'] - node2_data['y'])**2)
@@ -150,7 +150,7 @@ def calculate_heuristic(node1_id, node2_id, G): # (Değişiklik yok)
     avg_speed_mps = (DEFAULT_SPEED_LIMIT_KMPH*METER_PER_KM/SECONDS_PER_HOUR)*0.8 
     if avg_speed_mps <= 0: avg_speed_mps = 10.0
     return distance / avg_speed_mps
-def find_timed_path_A_star(agent_id, start_node, goal_node, graph, constraints, start_time=0.0): # (Değişiklik yok)
+def find_timed_path_A_star(agent_id, start_node, goal_node, graph, constraints, start_time=0.0): 
     max_ts_astar = MAX_SIM_TIME_STEPS * MAX_ASTAR_TIME_STEPS_FACTOR
     start_ts_idx = int(round(start_time/DELTA_T))
     if (get_location_id(node=start_node), start_ts_idx) in constraints: return None
@@ -191,7 +191,7 @@ def find_timed_path_A_star(agent_id, start_node, goal_node, graph, constraints, 
     return None
 
 # --- CTNode Sınıfı ve Çakışma Tespiti ---
-class CTNode: # (Değişiklik yok)
+class CTNode: 
     def __init__(self, constraints, solution):
         self.constraints = constraints; self.solution = solution; self.cost = self.calculate_cost()
     def calculate_cost(self):
@@ -205,7 +205,7 @@ class CTNode: # (Değişiklik yok)
         if self.cost != other.cost: return self.cost < other.cost
         return sum(len(c) for c in self.constraints.values()) < sum(len(c) for c in other.constraints.values())
     def __repr__(self): return f"CTN(C:{self.cost:.0f} #Cons:{sum(len(c) for c in self.constraints.values())})"
-def find_first_conflict(solution): # (Değişiklik yok)
+def find_first_conflict(solution): 
     if not solution or len(solution)<2: return None
     max_t=0;
     for p in solution.values():
@@ -229,7 +229,7 @@ def find_first_conflict(solution): # (Değişiklik yok)
     return None
 
 # --- Conflict-Based Search (CBS) Ana Fonksiyonu ---
-def run_cbs(initial_agents_list, graph, max_cbs_iterations=50): # (Değişiklik yok)
+def run_cbs(initial_agents_list, graph, max_cbs_iterations=50): 
     print("\n--- CBS Başlatılıyor ---"); cbs_open=[]; iter_c=0
     init_cons={a.id:set() for a in initial_agents_list}; init_sol={}; all_init_ok=True
     for a in initial_agents_list:
@@ -262,7 +262,7 @@ def run_cbs(initial_agents_list, graph, max_cbs_iterations=50): # (Değişiklik 
     return None
 
 # --- Animasyon Fonksiyonları ---
-def init_animation_func(): # (Değişiklik yok)
+def init_animation_func(): 
     global agent_artists, sim_agents_list_anim, current_anim_time, G_osmnx_planning_graph, route_colors_global
     reservations.clear(); current_anim_time = 0.0
     for i, agent_sim in enumerate(sim_agents_list_anim):
@@ -283,7 +283,7 @@ def init_animation_func(): # (Değişiklik yok)
         else: agent_artists[i].set_data([],[])
     if ax_anim: ax_anim.set_title(f"Simülasyon Adımı: 0, Zaman: {current_anim_time:.1f}s")
     return agent_artists
-def animate_frame_func(frame_num): # (Değişiklik yok)
+def animate_frame_func(frame_num): 
     global current_anim_time, sim_agents_list_anim, G_osmnx_planning_graph, ani 
     active_agent_exists = False
     for i, agent_sim in enumerate(sim_agents_list_anim):
@@ -317,7 +317,7 @@ def animate_frame_func(frame_num): # (Değişiklik yok)
     return agent_artists
 
 # =============================================================================
-# --- SUMO Rota Çevirici Fonksiyonları (Strateji B + C hibrit) ---
+# --- SUMO Rota Çevirici Fonksiyonları 
 # =============================================================================
 SUMO_EDGES_BY_NODES_CACHE = {} 
 ORIG_ID_TO_SUMO_EDGES_MAP = {}
@@ -341,11 +341,7 @@ def build_sumo_edge_maps(sumo_net_obj):
              SUMO_EDGES_BY_NODES_CACHE[(from_node_id, to_node_id)] = edge_id
              node_pair_cache_count +=1
         
-        # origID -> [kenar nesneleri listesi]
-        # SUMO Edge nesnesinden 'origId' parametresini almaya çalış
-        # SUMO versiyonuna göre bu .param.get('origID') veya .getParameter('origID') olabilir.
-        # Ya da doğrudan edge.get ursprünglD() gibi bir metod olabilir.
-        # En güncel sumolib'de genellikle .getParameter("origID") kullanılır.
+        
         orig_id_str = None
         try: # Farklı sumolib versiyonları için
             if hasattr(edge, 'getParameter') and edge.getParameter('origId'):
@@ -362,7 +358,7 @@ def build_sumo_edge_maps(sumo_net_obj):
             except ValueError: pass
         
         if orig_id_str:
-            orig_id_str = str(orig_id_str) # Her zaman string olsun
+            orig_id_str = str(orig_id_str) 
             if orig_id_str not in ORIG_ID_TO_SUMO_EDGES_MAP:
                 ORIG_ID_TO_SUMO_EDGES_MAP[orig_id_str] = []
             ORIG_ID_TO_SUMO_EDGES_MAP[orig_id_str].append(edge) # Kenar nesnesini sakla
@@ -402,7 +398,7 @@ def get_ordered_sumo_edges_from_origid_candidates(osmnx_start_node_id, osmnx_end
                 continue
             if edge_obj.getFromNode() == current_sumo_node:
                 # Eğer birden fazla seçenek varsa, hedef düğüme daha yakın olanı seçebiliriz (basit bir heuristik)
-                # Şimdilik ilk bulduğumuzu alalım.
+                
                 best_next_edge_obj = edge_obj
                 break 
         
@@ -410,16 +406,16 @@ def get_ordered_sumo_edges_from_origid_candidates(osmnx_start_node_id, osmnx_end
             ordered_sumo_edge_ids.append(best_next_edge_obj.getID())
             current_sumo_node = best_next_edge_obj.getToNode()
             visited_edges_in_segment.add(best_next_edge_obj.getID()) 
-            # remaining_candidates.remove(best_next_edge_obj) # Dikkat: Bu, diğer segmentler için sorun olabilir, set kullanmak daha iyi.
+            # remaining_candidates.remove(best_next_edge_obj) 
         else:
             # print(f"  Sıralama Uyarısı: {current_sumo_node.getID()}'dan {sumo_end_node.getID()}'ye doğru aday kenar bulunamadı.")
-            break # Daha fazla ilerleyemiyoruz
+            break 
 
     if current_sumo_node == sumo_end_node and ordered_sumo_edge_ids:
         return ordered_sumo_edge_ids
     elif ordered_sumo_edge_ids: # Bir yol bulundu ama hedefe tam varamadı
         # print(f"  Sıralama Uyarısı: {osmnx_start_node_id}->{osmnx_end_node_id} için yol hedefe ulaşmadı. Bulunan: {ordered_sumo_edge_ids}")
-        return None # Ya da kısmi yolu döndür? Şimdilik None.
+        return None 
     else:
         # print(f"  Sıralama Uyarısı: {osmnx_start_node_id}->{osmnx_end_node_id} için hiç sıralı yol bulunamadı.")
         return None
@@ -461,12 +457,11 @@ def get_sumo_edge_sequence_for_osmnx_segment_v_final(osmnx_node_u, osmnx_node_v,
         if isinstance(target_osmid, list): target_osmid = target_osmid[0]
         target_osmid_str = str(target_osmid)
         
-        # Hem pozitif hem de negatif origID'yi kontrol etmeliyiz, çünkü osmnx'teki 'reversed' bilgisine
-        # göre SUMO ID'si değişebilir.
+        # Hem pozitif hem de negatif origID'yi kontrol et,
         candidate_edges_positive = ORIG_ID_TO_SUMO_EDGES_MAP.get(target_osmid_str, [])
         candidate_edges_negative = ORIG_ID_TO_SUMO_EDGES_MAP.get("-" + target_osmid_str, [])
         
-        # osmnx'in yönüyle (reversed flag) SUMO'daki olası yönü eşleştirmeye çalışalım
+        # osmnx'in yönüyle (reversed flag) SUMO'daki olası yönü eşleştir
         is_osmnx_reversed = osmnx_edge_data.get('reversed', False)
         
         final_ordered_edges = None
@@ -476,7 +471,7 @@ def get_sumo_edge_sequence_for_osmnx_segment_v_final(osmnx_node_u, osmnx_node_v,
         if not final_ordered_edges and is_osmnx_reversed and candidate_edges_negative: # OSMnx yönü ters, negatif ID'li adayları dene
             final_ordered_edges = get_ordered_sumo_edges_from_origid_candidates(osmnx_node_u, osmnx_node_v, candidate_edges_negative, sumo_net_obj)
         
-        # Eğer yön bilgisiyle bulunamazsa, her iki yönü de dene (daha az kesin)
+        
         if not final_ordered_edges and candidate_edges_positive:
             final_ordered_edges = get_ordered_sumo_edges_from_origid_candidates(osmnx_node_u, osmnx_node_v, candidate_edges_positive, sumo_net_obj)
         if not final_ordered_edges and candidate_edges_negative:
@@ -530,9 +525,9 @@ def convert_to_sumo_routes_v_final(solution_paths, G_osmnx_graph, sumo_net_obj, 
     except Exception as e: print(f"HATA: XML yazılırken: {e}"); print(ET.tostring(routes_root, 'unicode'))
 
 import matplotlib.pyplot as plt
-import osmnx as ox # Eğer G_osmnx_planning_graph.nodes[node_id]['x'] için gerekliyse
+import osmnx as ox 
 
-# ... (Diğer görselleştirme fonksiyonlarınız ve ana kodunuz) ...
+
 
 def plot_agent_coordinates_vs_time(final_timed_solution, G_osmnx_graph, agents_list, route_colors):
     """
@@ -548,7 +543,7 @@ def plot_agent_coordinates_vs_time(final_timed_solution, G_osmnx_graph, agents_l
         return
 
     # Her Agent için ayrı figürler oluşturabiliriz veya tek bir figürde alt grafikler
-    # Şimdilik X ve Y koordinatları için ayrı ayrı iki figür oluşturalım.
+    
 
     # --- X Koordinatı vs Zaman ---
     plt.figure(figsize=(14, 7))
@@ -638,10 +633,10 @@ def plot_agent_coordinates_vs_time(final_timed_solution, G_osmnx_graph, agents_l
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.tight_layout()
 
-# ... (Mevcut GÖRSELLEŞTİRME FONKSİYONLARI bölümünüzün sonuna ekleyin) ...
+
 
 # =============================================================================
-# --- GÖRSELLEŞTİRME FONKSİYONLARI (Bu bölümü dosyanızın uygun bir yerine ekleyin) ---
+# --- GÖRSELLEŞTİRME FONKSİYONLARI 
 # =============================================================================
 
 def plot_space_time_graph(final_timed_solution, G_osmnx_graph, agents_list, route_colors):
@@ -686,10 +681,7 @@ def plot_space_time_graph(final_timed_solution, G_osmnx_graph, agents_list, rout
                     segment_length = edge_data.get('length', 0.0)
                 else: # Doğrudan kenar yoksa, bu beklenmedik bir durumdur.
                       # CBS çıktısının her zaman bağlı düğümler vermesi beklenir.
-                      # Hata vermek veya kuş uçuşu mesafeyi kullanmak bir seçenek olabilir.
-                      # Şimdilik, bu durumu bir uyarı ile geçelim ve mesafeyi 0 kabul edelim.
-                    # print(f"Uyarı (Grafik 3): Agent {agent_id} için {previous_node} -> {current_node_id} arasında doğrudan kenar yok. Segment mesafesi 0 kabul ediliyor.")
-                    # Alternatif: Kuş uçuşu mesafe (daha doğru ama yavaş olabilir ve harita projeksiyonuna bağlı)
+                      
                     node_prev_data = G_osmnx_graph.nodes[previous_node]
                     node_curr_data = G_osmnx_graph.nodes[current_node_id]
                     segment_length = ox.distance.great_circle_vec(node_prev_data['y'], node_prev_data['x'],
@@ -699,9 +691,7 @@ def plot_space_time_graph(final_timed_solution, G_osmnx_graph, agents_list, rout
                 current_cumulative_distance += segment_length
             except KeyError as e:
                 print(f"HATA (Grafik 3): Mesafe hesaplanırken düğüm veya kenar bulunamadı: {previous_node} veya {current_node_id}. Hata: {e}")
-                # Hata durumunda mesafeyi artırmayalım, bir önceki mesafede kalsın.
-                # Bu, grafikte bir platoya neden olabilir veya hatalı bir çizgiye.
-                # En son geçerli mesafeyi kullanmak daha iyi olabilir.
+                
                 if distances: distances.append(distances[-1]); # Son bilinen mesafeyi tekrarla
                 else: distances.append(0.0) # Eğer ilk segmentte hata olursa
                 previous_node = current_node_id # Bir sonraki adıma geçmek için güncelle
@@ -727,7 +717,7 @@ def plot_space_time_graph(final_timed_solution, G_osmnx_graph, agents_list, rout
 
 def plot_cbs_conflict_resolution_example(G_osmnx_graph, initial_solution_timed, conflict_info, final_solution_timed, agents_list, route_colors):
     """ Grafik 1: CBS Çakışma Çözüm Örneği """
-    fig, axes = plt.subplots(1, 2, figsize=(20, 9)) # Boyutu biraz artırdım
+    fig, axes = plt.subplots(1, 2, figsize=(20, 9)) 
     fig.suptitle('Şekil 1: CBS Çakışma Çözümü Örneği', fontsize=16, fontweight='bold')
     plt.style.use('seaborn-v0_8-whitegrid')
     colors = route_colors
@@ -802,7 +792,7 @@ def plot_cbs_conflict_resolution_example(G_osmnx_graph, initial_solution_timed, 
     ax.set_title('(b) CBS ile Çözülmüş Çakışmasız Rotalar', fontsize=12)
     ax.legend(fontsize=9, loc='best')
     ax.set_facecolor('#F0F0F0')
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95]) # Suptitle ve eksen etiketleri için yer bırak
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95]) # Suptitle ve eksen etiketleri
 
 
 def plot_cbs_performance_scaling_single_run(num_agents_val, solve_time_val, total_cost_val):
@@ -810,7 +800,7 @@ def plot_cbs_performance_scaling_single_run(num_agents_val, solve_time_val, tota
     fig, ax1 = plt.subplots(figsize=(10, 6))
     plt.style.use('seaborn-v0_8-whitegrid')
 
-    agent_counts = [num_agents_val] # Tek bir değer olduğu için liste içinde
+    agent_counts = [num_agents_val] 
     solve_times = [solve_time_val] if solve_time_val is not None and solve_time_val != -1 else []
     total_costs = [total_cost_val] if total_cost_val is not None and total_cost_val != -1 else []
 
@@ -868,7 +858,7 @@ def plot_cbs_performance_scaling_single_run(num_agents_val, solve_time_val, tota
       fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0.95), ncol=2, fontsize=10, frameon=True, facecolor='white', edgecolor='gray')
 
     plt.grid(True, linestyle='--', alpha=0.7)
-    plt.tight_layout(rect=[0, 0, 1, 0.90]) # Legend için yer bırak
+    plt.tight_layout(rect=[0, 0, 1, 0.90]) # Legend için yer 
 
 import matplotlib.pyplot as plt
 import osmnx as ox
@@ -886,14 +876,14 @@ def plot_routes_on_map_with_time_markers(G_osmnx_graph, final_timed_solution, ag
         print("plot_routes_on_map_with_time_markers: Çözüm verisi bulunamadı.")
         return
 
-    # Figür boyutunu biraz daha büyük tutabiliriz, yazılar için yer açılsın.
-    fig, ax = ox.plot_graph(G_osmnx_graph, show=False, close=False, bgcolor='#FFFFFF',
-                            node_size=0, edge_color='silver', edge_linewidth=0.6, figsize=(18, 18)) # figsize'ı artırdım
     
-    plt.title(f' Agent Routes at {time_interval}s Time Intervals', fontsize=18, fontweight='bold') # Başlık fontunu da büyüttüm
+    fig, ax = ox.plot_graph(G_osmnx_graph, show=False, close=False, bgcolor='#FFFFFF',
+                            node_size=0, edge_color='silver', edge_linewidth=0.6, figsize=(18, 18)) # figsize
+    
+    plt.title(f' Agent Routes at {time_interval}s Time Intervals', fontsize=18, fontweight='bold') # Başlık fontu
 
     max_time_overall = 0
-    # ... (max_time_overall ve diğer değişkenlerin hesaplanması - önceki cevaplardaki gibi) ...
+    
     for agent_id_key in final_timed_solution:
         path_tuples = final_timed_solution[agent_id_key]
         if path_tuples and path_tuples[-1] and path_tuples[-1][1] is not None:
@@ -910,13 +900,13 @@ def plot_routes_on_map_with_time_markers(G_osmnx_graph, final_timed_solution, ag
     min_x, min_y, max_x, max_y = ax.get_xlim()[0], ax.get_ylim()[0], ax.get_xlim()[1], ax.get_ylim()[1]
     x_range = max_x - min_x
     y_range = max_y - min_y
-    # Dinamik ofsetleri biraz daha büyük yapabiliriz veya sabit bir değer deneyebiliriz
+    
     dynamic_offset_x = x_range * 0.001 
     dynamic_offset_y = y_range * 0.001
 
 
     for agent_idx, agent_id_key in enumerate(final_timed_solution):
-        # ... (agent_id, path_tuples, current_color, agent_obj, agent_label_base tanımlamaları - önceki cevaplardaki gibi) ...
+        
         try:
             agent_id = int(agent_id_key)
         except (ValueError, TypeError):
@@ -938,8 +928,7 @@ def plot_routes_on_map_with_time_markers(G_osmnx_graph, final_timed_solution, ag
         if agent_obj:
             agent_label_base = ''#f"Agent {agent_id} ({getattr(agent_obj, 'start_node', 'N/A')}→{getattr(agent_obj, 'goal_node', 'N/A')})"
 
-        # Ana rotayı, başlangıç ve hedef noktalarını çizme...
-        # ... (Bu kısımlar önceki cevaplardaki gibi kalabilir) ...
+        
         if path_nodes_only:
             route_plot_elements = ox.plot_graph_route(G_osmnx_graph, path_nodes_only, route_color=current_color,
                                                       route_linewidth=2, route_alpha=0.6, ax=ax, show=False, close=False)
@@ -966,7 +955,7 @@ def plot_routes_on_map_with_time_markers(G_osmnx_graph, final_timed_solution, ag
         plotted_time_markers_for_agent_legend = False
         for t_idx, t_marker in enumerate(time_markers_to_plot):
             interp_x, interp_y = None, None
-            # ... (interpolasyonla interp_x, interp_y bulma - önceki cevaplardaki gibi) ...
+            
             if not path_tuples or len(path_tuples) < 2: continue
             for i in range(len(path_tuples) - 1):
                 if not path_tuples[i] or len(path_tuples[i]) < 2 or \
@@ -1010,7 +999,7 @@ def plot_routes_on_map_with_time_markers(G_osmnx_graph, final_timed_solution, ag
                     marker_legend_label = f'Agent {agent_id} Time-Progress.'
                     plotted_time_markers_for_agent_legend = True
                 
-                time_marker_scatter = ax.scatter(interp_x, interp_y, s=70, c=current_color, marker='D', # İşaretçi boyutunu biraz artırdım
+                time_marker_scatter = ax.scatter(interp_x, interp_y, s=70, c=current_color, marker='D', 
                                                  edgecolors='white', linewidths=0.8, zorder=5, alpha=0.95, 
                                                  label=marker_legend_label if marker_legend_label else "_nolegend_")
                 
@@ -1024,8 +1013,8 @@ def plot_routes_on_map_with_time_markers(G_osmnx_graph, final_timed_solution, ag
                     text_y = interp_y + offset_sign_y * dynamic_offset_y
                     
                     time_label_obj = ax.text(text_x, text_y, f"t={t_marker:.0f}", color='black', 
-                                           # YAZI TİPİ BOYUTUNU ARTIRDIM:
-                                           fontsize=10, # Önceki 5 idi, şimdi 7 veya 8 deneyebilirsiniz
+                                           
+                                           fontsize=10, 
                                            fontweight='normal', 
                                            ha='center' if offset_sign_x == 0 else ('left' if offset_sign_x > 0 else 'right'),
                                            va='center' if offset_sign_y == 0 else ('bottom' if offset_sign_y > 0 else 'top'),
@@ -1035,21 +1024,20 @@ def plot_routes_on_map_with_time_markers(G_osmnx_graph, final_timed_solution, ag
     if ADJUST_TEXT_AVAILABLE and use_adjust_text and text_labels_for_adjust:
         print("adjustText ile zaman etiketleri ayarlanıyor...")
         adjust_text(text_labels_for_adjust, 
-                    # expand_points=(1.2,1.2), expand_text=(1.2,1.2), # Bu değerlerle oynayabilirsiniz
+                    # expand_points=(1.2,1.2), expand_text=(1.2,1.2), 
                     arrowprops=dict(arrowstyle="-", color='gray', lw=0.5, alpha=0.6))
 
     if legend_handles_labels:
-        # Legend YAZI TİPİ BOYUTLARINI ARTIRDIM:
+        # Legend 
         ax.legend(legend_handles_labels.values(), legend_handles_labels.keys(), 
-                  fontsize=10,  # Önceki 6 idi, şimdi 8 veya 'small'
+                  fontsize=10,  
                   loc='upper left', bbox_to_anchor=(1.01, 1), borderaxespad=0., 
                   frameon=True, facecolor='white', framealpha=0.8, 
-                  title="Legend", title_fontsize=9) # Önceki 7 idi, şimdi 9 veya 'small'
+                  title="Legend", title_fontsize=9) 
     
     # Legend için sağda daha fazla yer bırakmak ve genel yerleşimi ayarlamak için:
-    fig.subplots_adjust(left=0.05, right=0.75, top=0.92, bottom=0.05) # right değerini biraz daha küçülttüm, top ve bottom ayarlandı
-    # plt.tight_layout(rect=[0, 0, 0.78, 0.95]) # rect parametrelerini ayarlayarak başlık ve Legend için yer bırakın
-    # tight_layout bazen subplots_adjust ile çakışabilir, birini veya diğerini kullanın veya dikkatli ayarlayın.
+    fig.subplots_adjust(left=0.05, right=0.75, top=0.92, bottom=0.05) 
+
 # =============================================================================
 # --- GÖRSELLEŞTİRME FONKSİYONLARI SONU ---
 # =============================================================================
@@ -1132,8 +1120,7 @@ if __name__ == "__main__":
         if start_n == goal_n: # Başlangıç ve hedef aynı olmasın
             temp_goals = [n for n in valid_nodes if n != start_n and n not in [s[1] for s in selected_nodes[num_agents:] if s[0] != start_n]] # Diğer hedeflerden de farklı olsun
             if not temp_goals: # Eğer hiç alternatif kalmazsa (çok küçük harita/çok Agent)
-                 # Farklı bir başlangıç noktası seçmeyi deneyebiliriz veya hata verebiliriz.
-                 # Şimdilik basitçe farklı bir düğüm seçiyoruz.
+                 
                  available_nodes_for_goal = [n for n in valid_nodes if n != start_n]
                  if not available_nodes_for_goal: print(f"HATA: Agent {i+1} için {start_n} dışında hedef düğüm bulunamadı."); exit()
                  goal_n = random.choice(available_nodes_for_goal)
@@ -1148,16 +1135,13 @@ if __name__ == "__main__":
     print("\nCBS algoritması çalıştırılıyor...")
     cbs_start_time_val = time.time()
 
-    # run_cbs fonksiyonunuzun güncellenmiş halini çağırın:
-    # final_timed_solution, initial_solution_for_graph1, first_conflict_for_graph1, cbs_total_cost_val = run_cbs(agents_for_cbs, G_osmnx_planning_graph)
-    # Şimdilik, run_cbs'in sadece final_timed_solution döndürdüğünü varsayarak devam ediyorum.
-    # Grafik 1 ve 2'nin tam çalışması için run_cbs'i güncellemeniz GEREKİR.
-    final_timed_solution = run_cbs(agents_for_cbs, G_osmnx_planning_graph) # BU SATIRI GÜNCELLEMELİSİNİZ!
+    
+    final_timed_solution = run_cbs(agents_for_cbs, G_osmnx_planning_graph) 
 
     cbs_solve_time_val = time.time() - cbs_start_time_val
     print(f"CBS çalışma süresi: {cbs_solve_time_val:.3f} saniye.")
 
-    # Grafik 1 ve 2 için verileri manuel olarak (veya geçici olarak) ayarlıyoruz.
+    
     # run_cbs güncellendiğinde bu kısımlar otomatik dolacak.
     initial_solution_for_graph1 = None # run_cbs'ten gelmeli
     first_conflict_for_graph1 = None   # run_cbs'ten gelmeli
@@ -1174,11 +1158,9 @@ if __name__ == "__main__":
                 valid_solution_for_cost = False; break
         if valid_solution_for_cost: cbs_total_cost_val = temp_cost
 
-        # Grafik 1 için DUMMY VERİ (run_cbs güncellenene kadar)
-        # Bu veriler SADECE Grafik 1'in hata vermeden çalışması içindir, ANLAMLI DEĞİLDİR.
+        
         if num_agents > 0 and not initial_solution_for_graph1:
-            # Basitçe ilk Agentın başlangıç çözümünü kopyala (anlamsız ama hata vermez)
-            # Gerçekçi olması için run_cbs'ten kısıtsız A* çözümlerini almalısınız.
+            
             first_agent_id = agents_for_cbs[0].id
             if first_agent_id in final_timed_solution:
                  initial_solution_for_graph1 = {first_agent_id: final_timed_solution[first_agent_id]}
@@ -1189,12 +1171,11 @@ if __name__ == "__main__":
 
 
         if num_agents > 1 and not first_conflict_for_graph1 and initial_solution_for_graph1:
-            # Çok basit bir dummy çakışma (ilk iki Agentın başlangıç düğümünde T=0'da gibi)
-            # Bu da ANLAMSIZDIR. Gerçek ilk çakışmayı run_cbs'ten almalısınız.
+            
             try:
                 node_for_conflict = initial_solution_for_graph1[agents_for_cbs[0].id][0][0]
                 first_conflict_for_graph1 = {'agent1': agents_for_cbs[0].id, 'agent2': agents_for_cbs[1].id, 'location': node_for_conflict, 'time_step': 0}
-            except: pass # Dummy veri oluşturma başarısız olursa sorun değil.
+            except: pass 
 
         if not initial_solution_for_graph1 or not first_conflict_for_graph1 :
             print("\nUYARI: Grafik 1 için 'initial_solution_for_graph1' ve/veya 'first_conflict_for_graph1' verileri eksik veya dummy. Lütfen run_cbs fonksiyonunu güncelleyin.")
@@ -1215,8 +1196,8 @@ if __name__ == "__main__":
                 agent_paths_viz[agent_id] = path_nodes_only
             else:
                 print(f"Uyarı: Agent {agent_id} için CBS çözümü bulunamadı veya boş.")
-                all_agents_have_paths = False # Eğer bir Agent için yol yoksa animasyon/sumo için sorun olabilir.
-                # cbs_paths_found True kalabilir, ama bazı Agentların yolu olmayabilir.
+                all_agents_have_paths = False 
+                
         if not all_agents_have_paths and not any(agent_paths_viz.values()): # Hiçbir Agent için yol yoksa
             cbs_paths_found = False
 
@@ -1236,9 +1217,9 @@ if __name__ == "__main__":
         print("\nsumolib veya SUMO ağı yüklenemediği için SUMO rota dosyası oluşturulmuyor.")
 
     # --- 6. Animasyon ---
-    # fig_anim ve ani globalde tanımlı, burada kullanılacak.
-    #global fig_anim, ani # Eğer animasyon fonksiyonları bunları global olarak bekliyorsa
-    show_animation = True # Animasyonu göstermek isteyip istemediğinizi buradan kontrol edin
+    
+    
+    show_animation = True 
 
     if cbs_paths_found and any(agent_paths_viz.values()) and show_animation:
         print("\n--- Rotalar Hazır: Animasyon Başlatılıyor ---")
@@ -1303,7 +1284,7 @@ if __name__ == "__main__":
             import traceback
             traceback.print_exc()
             fig_anim = None # Hata olursa fig_anim'i sıfırla
-            # plt.close('all') # Açık figürleri kapatıp diğerlerine geçebiliriz
+            
 
     elif cbs_paths_found:
         print("\nCBS rotaları bulundu ancak animasyon için uygun yol(lar) yok veya animasyon kapalı.")
@@ -1345,7 +1326,7 @@ if __name__ == "__main__":
                     G_osmnx_planning_graph,
                     initial_solution_for_graph1,
                     first_conflict_for_graph1,
-                    final_timed_solution, # Nihai çözüm de Grafik 1 için önemli
+                    final_timed_solution, 
                     agents_for_cbs,
                     route_colors_global
                 )
@@ -1356,7 +1337,7 @@ if __name__ == "__main__":
         elif cbs_paths_found: # Sadece final çözüm varsa bile uyarı ver
              print("Grafik 1 için başlangıç çakışma verileri eksik veya dummy. Lütfen run_cbs fonksiyonunu güncelleyin. Grafik 1 atlanıyor.")
 
-        # Grafik 2: CBS Performansının Ölçeklenmesi (Tek Çalıştırma)
+        
         # cbs_solve_time_val ve cbs_total_cost_val yukarıda CBS çağrısı sonrası ayarlandı.
         if cbs_total_cost_val != float('inf') or cbs_solve_time_val > 0: # En az bir geçerli veri varsa
             try:
